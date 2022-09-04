@@ -1,0 +1,7 @@
+interface ContentPack {
+
+}
+
+interface GameState {
+
+}
