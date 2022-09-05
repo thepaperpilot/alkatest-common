@@ -34,9 +34,9 @@ interface ServerToClientEvents {
     "set rooms": (rooms: ClientRoomData[]) => void;
     "set content packs": (contentPacks: (string | ContentPack)[]) => void;
     "set game state": (state: GameState) => void;
-    "set nicknames": (nicknames: string[]) => void;
-    "set cursor position": (nickname: string, pos: { x: number; y: number }) => void;
-    chat: (nickname: string, message: string) => void;
+    "set nicknames": (nicknames: Record<string, string>) => void;
+    "set cursor position": (user: string, pos: { x: number; y: number }) => void;
+    chat: (user: string, message: string) => void;
     "move node": (node: string, pos: { x: number; y: number }) => void;
     "connect nodes": (
         startNode: string,
@@ -64,6 +64,7 @@ interface ClientToServerEvents {
     "set content packs": (contentPacks: (string | ContentPack)[]) => void;
     "set game state": (state: GameState) => void;
     "set cursor position": (pos: { x: number; y: number }) => void;
+    "set nickname": (nickname: string) => void;
     chat: (message: string) => void;
     "move node": (node: string, pos: { x: number; y: number }) => void;
     "connect nodes": (
