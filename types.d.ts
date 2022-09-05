@@ -25,6 +25,7 @@ interface ClientRoomData {
     name: string;
     host: string;
     hasPassword: boolean;
+    numContentPacks: number;
 }
 
 interface ServerToClientEvents {
