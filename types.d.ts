@@ -44,7 +44,7 @@ interface ServerToClientEvents {
         endNode: string,
         inputIndex: number
     ) => void;
-    "joined room": (room: string) => void;
+    "joined room": (room: string, isHost: boolean) => void;
     "left room": () => void;
 }
 
