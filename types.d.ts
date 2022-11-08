@@ -1,13 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // At least one export must be explicit so that this file is loaded as a module
-export type State =
-    | string
-    | number
-    | boolean
-    | ContentPack
-    | { [key: string]: State }
-    | { [key: number]: State };
-
-interface ContentPack {
+export interface ContentPack {
     display: string;
     eventListeners?: {
         [x: string]: ArrayBlock<ActionBlock>;
@@ -21,35 +14,29 @@ interface ContentPack {
     types?: {
         [x: string]: TypeType;
     };
-    [x: string]: x extends "display" ? string : Record<string, State>;
+    [x: string]: x extends "display" ? string : Record<string, any>;
 }
 
 interface NodeType {
-    display: StringBlock;
-    size: SizeBlock;
-    draggable?: BooleanBlock;
-    data?: DictionaryBlock<TypeBlock>;
-    inventory?: Inventory;
-    actions?: DictionaryBlock<NodeAction>;
-    place?: ArrayBlock<ActionBlock>;
+    display: ProcessedComputable<StringBlock>;
+    size: ProcessedComputable<SizeBlock>;
+    draggable?: ProcessedComputable<BooleanBlock>;
+    data?: ProcessedComputable<DictionaryBlock<TypeBlock>>;
+    inventory?: ProcessedComputable<Inventory>;
+    actions?: ProcessedComputable<DictionaryBlock<NodeAction>>;
+    place?: ProcessedComputable<ArrayBlock<ActionBlock>>;
 }
 
 interface ItemType {
-    display: StringBlock;
-    node?: StringBlock;
-    maxStackSize?: NumberBlock;
+    display: ProcessedComputable<StringBlock>;
+    node?: ProcessedComputable<StringBlock>;
+    maxStackSize?: ProcessedComputable<NumberBlock>;
 }
 
 interface TypeType {
-    data?: {
-        [x: string]: TypeBlock;
-    };
-    methods?: {
-        [x: string]: MethodTypeBlock;
-    };
-    properties?: {
-        [x: string]: TypeBlock & { value: StateBlock };
-    };
+    data?: ProcessedComputable<Record<string, TypeBlock>>;
+    methods?: ProcessedComputable<Record<string, MethodTypeBlock>>;
+    properties?: ProcessedComputable<Record<string, TypeBlock & { value: any }>>;
 }
 
 interface Inventory {
@@ -73,30 +60,30 @@ interface NodeActionType {
 
 interface MethodBlock {
     _type: "method";
-    object: StringBlock;
+    object: ObjectBlock;
     method: StringBlock;
     params?: DictionaryBlock;
 }
 
 interface PropertyBlock {
     _type: "property";
-    object: StringBlock;
+    object: ObjectBlock;
     property: StringBlock;
 }
 
-interface GetObjectBlock {
-    _type: "getObject";
+interface GetContextBlock {
+    _type: "getContext";
     id: StringBlock;
 }
 
 interface TernaryBlock {
     _type: "ternary";
     condition: BooleanBlock;
-    true: StateBlock;
-    false: StateBlock;
+    true: any;
+    false: any;
 }
 
-type ReferenceBlock = MethodBlock | PropertyBlock | GetObjectBlock | TernaryBlock;
+type ReferenceBlock = MethodBlock | PropertyBlock | GetContextBlock | TernaryBlock;
 
 interface MethodTypeBlock {
     params?: Record<string, TypeBlock>;
@@ -132,7 +119,7 @@ interface ValuesBlock<T> {
     dictionary: DictionaryBlock<T>;
 }
 
-type ArrayBlock<T = StateBlock> =
+type ArrayBlock<T = any> =
     | MapBlock<unknown, T>
     | FilterBlock<T>
     | KeysBlock<T>
@@ -151,16 +138,12 @@ interface CreateDictionaryBlock<T> {
     entries: ArrayBlock<EntryBlock<T>>;
 }
 
-interface EntryBlock<T = State> {
-    _type: "entry";
+interface EntryBlock<T = any> {
     key: StringBlock;
     value: T;
 }
 
-type DictionaryBlock<T = StateBlock> =
-    | CreateDictionaryBlock<T>
-    | ReferenceBlock
-    | Record<string, T>;
+type DictionaryBlock<T = any> = CreateDictionaryBlock<T> | ReferenceBlock | Record<string, T>;
 
 interface DictionaryTypeBlock {
     _type: "dictionary";
@@ -169,14 +152,7 @@ interface DictionaryTypeBlock {
     internal?: boolean;
 }
 
-type StateBlock =
-    | StringBlock
-    | NumberBlock
-    | BooleanBlock
-    | DictionaryBlock
-    | ArrayBlock
-    | ReferenceBlock
-    | State;
+type ObjectBlock = (object & { _type: never }) | ReferenceBlock;
 
 interface ConcatBlock {
     _type: "concat";
@@ -193,12 +169,12 @@ interface StringTypeBlock {
 
 interface EqualsBlock {
     _type: "equals";
-    operands: ArrayBlock<StateBlock>;
+    operands: ArrayBlock<any>;
 }
 
 interface NotEqualsBlock {
     _type: "notEquals";
-    operands: ArrayBlock<StateBlock>;
+    operands: ArrayBlock<any>;
 }
 
 interface LessThanBlock {
@@ -221,15 +197,30 @@ interface GreaterThanOrEqualBlock {
     operands: ArrayBlock<NumberBlock>;
 }
 
-interface ObjectExistsBlock {
-    _type: "objectExists";
+interface ContextExistsBlock {
+    _type: "contextExists";
     object: StringBlock;
 }
 
 interface PropertyExistsBlock {
     _type: "propertyExists";
-    object: StringBlock;
+    object: ObjectBlock;
     property: StringBlock;
+}
+
+interface AllBlock {
+    _type: "all";
+    operands: ArrayBlock<BooleanBlock>;
+}
+
+interface AnyBlock {
+    _type: "any";
+    operands: ArrayBlock<BooleanBlock>;
+}
+
+interface NoneBlock {
+    _type: "none";
+    operands: ArrayBlock<BooleanBlock>;
 }
 
 type BooleanBlock =
@@ -239,8 +230,11 @@ type BooleanBlock =
     | GreaterThanBlock
     | LessThanOrEqualBlock
     | GreaterThanOrEqualBlock
-    | ObjectExistsBlock
+    | ContextExistsBlock
     | PropertyExistsBlock
+    | AllBlock
+    | AnyBlock
+    | NoneBlock
     | ReferenceBlock
     | boolean;
 
@@ -320,16 +314,16 @@ interface AddItemsToInventoryBlock {
 
 interface SetDataBlock {
     _type: "setData";
-    object: StringBlock;
+    object: ObjectBlock;
     key: StringBlock;
-    value: StateBlock;
+    value: any;
 }
 
 interface AddNodeBlock {
     _type: "addNode";
     nodeType: StringBlock;
     pos: PositionBlock;
-    data?: StateBlock;
+    data?: any;
 }
 
 interface RemoveNodeBlock {
@@ -340,7 +334,7 @@ interface RemoveNodeBlock {
 interface EventBlock {
     _type: "event";
     event: StringBlock;
-    data?: StateBlock;
+    data?: any;
 }
 
 interface ErrorBlock {
@@ -359,7 +353,7 @@ type ActionBlock =
     | RemoveNodeBlock
     | EventBlock
     | ErrorBlock
-    | { _type: "@return"; value?: StateBlock }
+    | { _type: "@return"; value?: any }
     | { _type: "@break" };
 
 interface ReferenceTypeBlock {
@@ -406,7 +400,7 @@ type SizeBlock =
 
 type ContentPackContext = Record<
     string,
-    { _type: Record<string, TypeBlock>; data: Record<string, StateBlock> }
+    { _type: Record<string, TypeBlock>; data: Record<string, any> }
 >;
 
 interface GameState {
@@ -423,7 +417,7 @@ interface NodeState {
         y: number;
     };
     _type: string;
-    data?: State;
+    data?: any;
 }
 
 interface ClientRoomData {
